@@ -1,0 +1,6 @@
+[all]
+guide.aelve.com
+codesearch.aelve.com
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
