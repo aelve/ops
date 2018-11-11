@@ -1,0 +1,23 @@
+---
+
+# Set up SSH keys on our machines.
+
+- hosts: all
+  tasks:
+    - name: Add all SSH keys without removing previous ones
+      authorized_key:
+        user: root
+        key: '{{ item }}'
+      with_items:
+        # Artyom
+        - https://github.com/neongreen.keys
+        # the Guide team
+        - https://github.com/willbasky.keys
+        - https://github.com/mixailflash.keys
+        - https://github.com/Gigiman.keys
+        - https://github.com/avele.keys
+        # the Codesearch team
+        - https://github.com/Kabowyad.keys
+        - https://github.com/kamilongus.keys
+        - https://github.com/Evengining.keys
+        - https://github.com/Som3.keys

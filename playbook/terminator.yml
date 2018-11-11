@@ -1,0 +1,30 @@
+---
+
+# Set up a load balancer and SSL terminator. All our domains should point
+# there and then traffic would be rerouted to the right machines.
+
+# When adding a domain, don't forget to update both balancer_vhosts and
+# certbot_certs.
+
+- hosts: terminator
+  tasks:
+
+    - include_role:
+        name: holms.balancer
+      vars:
+        balancer_vhosts:
+          - name: codesearch.aelve.com
+            upstreams: ["s1.codesearch.aelve.com"]
+
+    - name: Install certbot-nginx
+      apt:
+        name: python-certbot-nginx
+        update_cache: yes
+
+    - include_role:
+        name: geerlingguy.certbot
+      vars:
+        certbot_admin_email: yom@artyom.me
+        certbot_certs:
+          - domains:
+              - codesearch.aelve.com

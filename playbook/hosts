@@ -1,7 +1,10 @@
 [all]
+terminator.aelve.com
 guide.aelve.com
-codesearch.aelve.com
 s1.codesearch.aelve.com
+
+[terminator]
+terminator.aelve.com
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3

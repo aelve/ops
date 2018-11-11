@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  remote_user: root
+
+  vars:
+      - balancer_vhosts:
+        - { name: "my.project.com",  upstreams: ['google.com', 'facebook.com' ] }
+
+  roles:
+      - { role: ansible-balancer }
