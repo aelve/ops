@@ -1,0 +1,54 @@
+# Install matomo
+
+- name: Matomo
+  hosts: matomo
+  connection: ssh
+  gather_facts: no
+  tasks:
+    - docker_service:
+        project_src: compose/x86
+        state: absent
+
+    - docker_service:
+        project_src: compose/x86
+      register: output
+
+    - debug:
+        var: output
+
+    - docker_service:
+        project_src: compose/x86
+        build: no
+      register: output
+
+    - debug:
+        var: output
+
+    - assert:
+        that: "not output.changed "
+
+    - docker_service:
+        project_src: compose/x86
+        build: no
+        stopped: true
+      register: output
+
+    - debug:
+        var: output
+
+    - assert:
+        that:
+          - "not matomo_docker.state.running"
+
+    - docker_service:
+        project_src: compose/x86
+        build: no
+        restarted: true
+      register: output
+
+    - debug:
+        var: output
+
+    - assert:
+        that:
+          - "matomo_docker.state.running"
