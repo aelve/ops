@@ -16,6 +16,7 @@
         packages:
         - apt-transport-https
         - ca-certificates
+        - curl
         - python3-apt
         - python-apt
         - gnupg-agent
@@ -44,3 +45,9 @@
         # - docker-compose
         - containerd.io
         update_cache: yes
+
+    - name: Install docker-compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.23.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture}}
+        dest: /usr/local/bin/docker-compose
+        mode: u+x

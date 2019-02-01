@@ -21,7 +21,7 @@
         # executable: bash
         # state: absent
         name:
-          - docker
-          - docker-compose
+          - docker-py
+        #   - docker-compose
           - PyYAML
 
