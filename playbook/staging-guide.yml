@@ -26,9 +26,10 @@
         - ansible_python_interpreter: "/usr/bin/env python-docker"
       docker_container:
         name: guide
-        state: started
         image: "quay.io/aelve/guide:{{image_name}}"
         pull: true
+        state: started
+        recreate: true
         ports:
           - "{{port_main}}:{{port_main}}"
           - "{{port_api}}:{{port_api}}"
