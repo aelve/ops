@@ -9,3 +9,7 @@ terminator.aelve.com
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
+
+[stage]
+staging.guide.aelve.com
+

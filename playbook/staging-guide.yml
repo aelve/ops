@@ -1,0 +1,33 @@
+# Using https://github.com/nickjj/ansible-docker/ to install docker
+
+- hosts: stage
+  become: true
+
+
+  name: Install docker
+  pre_tasks:
+    - include_role:
+        name: nickjj.docker
+      vars:
+        docker__edition: "ce"
+        docker__channel: ["stable"]
+        docker__version: ""
+        docker__state: "latest"
+        docker__compose_version: ""
+
+    - name: Run the equivalent of "apt-get update"
+      apt:
+        update_cache: true
+      changed_when: false
+
+  tasks:
+    - name: Fetch develop--back container from quay.io and ensure a container is running.
+      vars:
+        - ansible_python_interpreter: "/usr/bin/env python-docker"
+      docker_container:
+        name: guide-backend
+        state: started
+        image: "quay.io/aelve/guide:develop--back"
+        pull: true
+        ports:
+          - "8080:8080"
