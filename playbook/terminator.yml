@@ -13,8 +13,8 @@
         name: holms.balancer
       vars:
         balancer_vhosts:
-          - name: codesearch.aelve.com
-            upstreams: ["s1.codesearch.aelve.com"]
+          - { name: "codesearch.aelve.com", upstreams: ["s1.codesearch.aelve.com"] }
+          - { name: "staging.codesearch.aelve.com", upstreams: ["s1.staging.codesearch.aelve.com"] }
 
     - name: Install certbot-nginx
       apt:
@@ -28,3 +28,4 @@
         certbot_certs:
           - domains:
               - codesearch.aelve.com
+              - staging.codesearch.aelve.com
