@@ -21,13 +21,15 @@
       changed_when: false
 
   tasks:
-    - name: Fetch develop--back container from quay.io and ensure a container is running.
+    - name: Fetch container from quay.io and ensure it is running.
       vars:
         - ansible_python_interpreter: "/usr/bin/env python-docker"
       docker_container:
-        name: guide-backend
+        name: guide
         state: started
-        image: "quay.io/aelve/guide:develop--back"
+        image: "quay.io/aelve/guide:{{container_name}}"
         pull: true
         ports:
-          - "8080:8080"
+          - "{{port_main}}:{{port_main}}"
+          - "{{port_api}}:{{port_api}}"
+          - "{{port_ekg}}:{{port_ekg}}"

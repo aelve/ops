@@ -16,7 +16,10 @@
           - name: codesearch.aelve.com
             upstreams: ["s1.codesearch.aelve.com"]
           - name: staging.guide.aelve.com
-            upstreams: ["s1.staging.guide.aelve.com"]
+            upstreams: [
+              's1.staging.guide.aelve.com:{{port_main}}', 's1.staging.guide.aelve.com:{{port_api}}',
+              # 's1.staging.guide.aelve.com:{{port_ekg}}',
+              ]
 
     - name: Install certbot-nginx
       apt:
