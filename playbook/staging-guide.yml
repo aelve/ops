@@ -21,13 +21,13 @@
       changed_when: false
 
   tasks:
-    - name: Fetch container from quay.io and ensure it is running.
+    - name: Fetch image from quay.io and ensure a container is running.
       vars:
         - ansible_python_interpreter: "/usr/bin/env python-docker"
       docker_container:
         name: guide
         state: started
-        image: "quay.io/aelve/guide:{{container_name}}"
+        image: "quay.io/aelve/guide:{{image_name}}"
         pull: true
         ports:
           - "{{port_main}}:{{port_main}}"

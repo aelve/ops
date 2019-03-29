@@ -10,7 +10,7 @@ ansible_python_interpreter=/usr/bin/python3
 port_main=8080
 port_api=4400
 port_ekg=5050
-container_name=develop--back
+image_name=develop--back
 
 [terminator]
 terminator.aelve.com
