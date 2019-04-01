@@ -1,24 +1,15 @@
-# Using https://github.com/nickjj/ansible-docker/ to install docker
+#
+# This playbook install docker, compose and keep it running. Then it fetch pointed in host image of guide from quay.io, run container, and start guide. And all of them will restarted if server rebooted.
+# Launch sites on http not https.
+#
 
-- hosts: stage
+- hosts: staging-guide
   become: true
 
-
-  name: Install docker
+  name: Install docker, compose and keep it running if they don't.
   pre_tasks:
     - include_role:
-        name: nickjj.docker
-      vars:
-        docker__edition: "ce"
-        docker__channel: ["stable"]
-        docker__version: ""
-        docker__state: "latest"
-        docker__compose_version: ""
-
-    - name: Run the equivalent of "apt-get update"
-      apt:
-        update_cache: true
-      changed_when: false
+        name: geerlingguy.docker
 
   tasks:
     - name: Fetch image from quay.io and ensure a container is running.
@@ -33,6 +24,6 @@
         restart_policy: always
         command: "./guide"
         ports:
-          - "{{port_main}}:{{port_main}}"
-          - "{{port_api}}:{{port_api}}"
-          - "{{port_ekg}}:{{port_ekg}}"
+          - "{{guide_main_port}}:{{guide_main_port}}"
+          - "{{guide_api_port}}:{{guide_api_port}}"
+          - "{{guide_ekg_port}}:{{guide_ekg_port}}"
