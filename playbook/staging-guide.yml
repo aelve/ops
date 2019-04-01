@@ -1,9 +1,13 @@
 #
-# This playbook install docker, compose and keep it running. Then it fetch pointed in host image of guide from quay.io, run container, and start guide. And all of them will restarted if server rebooted.
+# This playbook installs a docker, composes and keeps it running.
+# Then it fetches pointed in the host an image of Guide from quay.io,
+# runs a container, and starts the Guide.
+# And all of them will restarted if a server rebooted.
+#
 # Launch sites on http not https.
 #
 
-- hosts: staging-guide
+- hosts: guide-staging
   become: true
 
   name: Install docker, compose and keep it running if they don't.
@@ -17,7 +21,7 @@
         - ansible_python_interpreter: "/usr/bin/env python-docker"
       docker_container:
         name: guide
-        image: "quay.io/aelve/guide:{{image_name}}"
+        image: "quay.io/aelve/guide:{{guide_image_name}}"
         pull: true
         state: started
         restart: true
