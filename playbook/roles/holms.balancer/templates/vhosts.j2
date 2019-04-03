@@ -6,8 +6,9 @@ upstream {{ item.name }} {
 }
 
 server {
-    listen         80;
-    server_name    {{ item.name }};
+    listen         {{ item.listen_data }};
+    server_name    {{ item.server_name }};
+    error_page     {{ item.error_page }};
 
     location / {
         proxy_pass http://{{ item.name }};
@@ -21,4 +22,10 @@ server {
         proxy_cache off;
         client_max_body_size 200M;
     }
+
+    ssl_certificate /etc/letsencrypt/live/{{ item.server_name }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ item.server_name }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
+

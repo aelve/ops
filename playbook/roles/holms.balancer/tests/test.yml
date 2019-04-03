@@ -6,5 +6,5 @@
       - balancer_vhosts:
         - { name: "my.project.com",  upstreams: ['google.com', 'facebook.com' ] }
 
-  roles:
-      - { role: ansible-balancer }
+#   roles:
+#       - { role: ansible-balancer }

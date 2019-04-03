@@ -6,6 +6,8 @@
 # When adding a domain, don't forget to update both balancer_vhosts and
 # certbot_certs.
 
+# To certbot_certs's domains add server_name.
+
 - hosts: terminator
   tasks:
 
@@ -13,111 +15,41 @@
         name: holms.balancer
       vars:
         balancer_vhosts:
-          - { name: "codesearch.aelve.com", upstreams: ["s1.codesearch.aelve.com"] }
-          - { name: "staging.codesearch.aelve.com", upstreams: ["s1.staging.codesearch.aelve.com"] }
+          - name: codesearch-portainer
+            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
+            listen_data: "{{ codesearch_portainer_port }} ssl"
+            server_name: "staging.codesearch.aelve.com"
+            error_page: "497 301 =307 https://$host:{{ codesearch_portainer_port }}$request_uri"
 
-    - include_role:
-        name: geerlingguy.nginx
-      vars:
-        - nginx_upstreams:
-            - name: guide-main
-              strategy: "least_conn"
-              servers: [
-                "s1.staging.guide.aelve.com:{{ guide_main_port }} max_fails=1 fail_timeout=10s"
-              ]
+          - name: codesearch-staging
+            upstreams: [ 's1.staging.codesearch.aelve.com' ]
+            listen_data: "{{ codesearch_staging_port }} ssl"
+            server_name: "staging.codesearch.aelve.com"
+            error_page: "497 301 =307 https://$host$request_uri"
 
-            - name: guide-api
-              strategy: "least_conn"
-              servers: [
-                "s1.staging.guide.aelve.com:{{ guide_api_port }} max_fails=1 fail_timeout=10s"
-              ]
+          - name: codesearch
+            upstreams: [ 's1.codesearch.aelve.com' ]
+            listen_data: "{{ codesearch_port }} ssl"
+            server_name: "codesearch.aelve.com"
+            error_page: "497 301 =307 https://$host$request_uri"
 
-            - name: guide-ekg
-              strategy: "least_conn"
-              servers: [
-                "s1.staging.guide.aelve.com:{{ guide_ekg_port }} max_fails=1 fail_timeout=10s"
-              ]
+          - name: guide-main
+            upstreams: [ 's1.staging.guide.aelve.com:{{guide_main_port}}' ]
+            listen_data: "{{ guide_main_port }} ssl"
+            server_name: "staging.guide.aelve.com"
+            error_page: "497 301 =307 https://$host:{{ guide_main_port }}$request_uri"
 
-        - nginx_vhosts:
-            # guide-main
-            - listen: "{{ guide_main_port }} ssl"
-              server_name: "staging.guide.aelve.com"
-              error_page: "497 301 =307 https://$host:{{ guide_main_port }}$request_uri"
-              state: "present"
-              filename: "guide-main.conf"
-              extra_parameters: |
-                location / {
-                    proxy_pass http://guide-main;
-                    proxy_set_header Connection '';
-                    proxy_set_header Host $http_host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                    chunked_transfer_encoding off;
-                    proxy_buffering off;
-                    proxy_cache off;
-                    client_max_body_size 200M;
-                    }
+          - name: guide-api
+            upstreams: [ 's1.staging.guide.aelve.com:{{guide_api_port}}' ]
+            listen_data: "{{ guide_api_port }} ssl"
+            server_name: "staging.guide.aelve.com"
+            error_page: "497 301 =307 https://$host:{{ guide_api_port }}$request_uri"
 
-                ssl_certificate /etc/letsencrypt/live/staging.guide.aelve.com/fullchain.pem;
-                ssl_certificate_key /etc/letsencrypt/live/staging.guide.aelve.com/privkey.pem;
-                include /etc/letsencrypt/options-ssl-nginx.conf;
-                ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-            # guide-api
-            - listen: "{{ guide_api_port }} ssl"
-              server_name: "staging.guide.aelve.com"
-              error_page: "497 301 =307 https://$host:{{ guide_api_port }}$request_uri"
-              state: "present"
-              filename: "guide-api.conf"
-              extra_parameters: |
-                location / {
-                    proxy_pass http://guide-api;
-                    proxy_set_header Connection '';
-                    proxy_set_header Host $http_host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                    chunked_transfer_encoding off;
-                    proxy_buffering off;
-                    proxy_cache off;
-                    client_max_body_size 200M;
-                    }
-
-                ssl_certificate /etc/letsencrypt/live/staging.guide.aelve.com/fullchain.pem;
-                ssl_certificate_key /etc/letsencrypt/live/staging.guide.aelve.com/privkey.pem;
-                include /etc/letsencrypt/options-ssl-nginx.conf;
-                ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-            # guide-ekg
-            - listen: "{{ guide_ekg_port }} ssl"
-              server_name: "staging.guide.aelve.com"
-              error_page: "497 301 =307 https://$host:{{ guide_ekg_port }}$request_uri"
-              state: "present"
-              filename: "guide-ekg.conf"
-              extra_parameters: |
-                location / {
-                    proxy_pass http://guide-ekg;
-                    proxy_set_header Connection '';
-                    proxy_set_header Host $http_host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                    chunked_transfer_encoding off;
-                    proxy_buffering off;
-                    proxy_cache off;
-                    client_max_body_size 200M;
-                    }
-
-                ssl_certificate /etc/letsencrypt/live/staging.guide.aelve.com/fullchain.pem;
-                ssl_certificate_key /etc/letsencrypt/live/staging.guide.aelve.com/privkey.pem;
-                include /etc/letsencrypt/options-ssl-nginx.conf;
-                ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-    - name: Install certbot-nginx
-      apt:
-        name: python-certbot-nginx
-        update_cache: yes
+          - name: guide-ekg
+            upstreams: [ 's1.staging.guide.aelve.com:{{guide_ekg_port}}' ]
+            listen_data: "{{ guide_ekg_port }} ssl"
+            server_name: "staging.guide.aelve.com"
+            error_page: "497 301 =307 https://$host:{{ guide_ekg_port }}$request_uri"
 
     - include_role:
         name: geerlingguy.certbot

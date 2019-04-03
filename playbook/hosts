@@ -11,6 +11,9 @@ guide_main_port=8080
 guide_api_port=4400
 guide_ekg_port=5050
 guide_image_name=develop--back
+codesearch_portainer_port=9080
+codesearch_port=443
+codesearch_staging_port=443
 
 [terminator]
 terminator.aelve.com

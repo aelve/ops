@@ -7,3 +7,7 @@ balancer_ssl_crt: ""
 balancer_ssl_pem: ""
 balancer_ssl_trusted_crt: ""
 balancer_ssl_trusted_key: ""
+
+listen: "80 http2"
+server_name: "myserver1.com"
+error_page: ""
