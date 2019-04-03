@@ -3,6 +3,7 @@ terminator.aelve.com
 guide.aelve.com
 s1.codesearch.aelve.com
 s1.staging.codesearch.aelve.com
+s1.staging.guide.aelve.com
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
@@ -15,5 +16,5 @@ guide_image_name=develop--back
 terminator.aelve.com
 
 [guide-staging]
-staging.guide.aelve.com
+s1.staging.guide.aelve.com
 
