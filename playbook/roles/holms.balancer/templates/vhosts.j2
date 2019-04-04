@@ -8,7 +8,10 @@ upstream {{ item.name }} {
 server {
     listen         {{ item.listen_data }};
     server_name    {{ item.server_name }};
-    error_page     {{ item.error_page }};
+
+{% if item.error_page %}
+    error_page 497 301 =307 https://$host:{{ item.port }}$request_uri;
+{% endif %}
 
     location / {
         proxy_pass http://{{ item.name }};
@@ -29,15 +32,16 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
+{% if item.server_without_port %}
+
 server {
     if ($host = {{ item.server_name }}) {
         return 301 https://$host$request_uri;
-    } # managed by Certbot
-
+    }
 
     listen         80;
     server_name    {{ item.server_name }};
-    return 404; # managed by Certbot
-
-
+    return 404;
 }
+
+{% endif %}

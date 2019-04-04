@@ -8,6 +8,28 @@ balancer_ssl_pem: ""
 balancer_ssl_trusted_crt: ""
 balancer_ssl_trusted_key: ""
 
-listen: "80 http2"
+# Cusomization
+# See innards at playbook/roles/holms.balancer/templates/vhosts.j2
+listen: "443 ssl"
 server_name: "myserver1.com"
-error_page: ""
+# A redirect with specific port uses error_page and port
+# error_page 497 301 =307 https://$host:{{ port }}$request_uri
+error_page: true
+port: 9000
+# Redirect without a port uses
+server_without_port: false
+
+# For example.
+# A rediraction without a specific port, SSL only. Set
+listen: "443 ssl"
+server_name: "yourserver.com"
+error_page: false
+# port: 9000 # it doesn't used.
+server_without_port: true # it add server block.
+
+# A rediraction with specific port. Set
+listen: "9000 ssl"
+server_name: "yourserver.com"
+error_page: true
+port: 9000 # it used in error_page.
+server_without_port: false # it add server block.

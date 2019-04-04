@@ -8,6 +8,8 @@
 
 # To certbot_certs's domains add server_name.
 
+# More info at playbook/roles/holms.balancer/defaults/main.yml
+
 - hosts: terminator
   tasks:
 
@@ -15,41 +17,51 @@
         name: holms.balancer
       vars:
         balancer_vhosts:
-          - name: codesearch-portainer
-            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
-            listen_data: "{{ codesearch_portainer_port }} ssl"
-            server_name: "staging.codesearch.aelve.com"
-            error_page: "497 301 =307 https://$host:{{ codesearch_portainer_port }}$request_uri"
+          - name: codesearch
+            upstreams: [ 's1.codesearch.aelve.com' ]
+            listen_data: "{{ codesearch_port }} ssl"
+            server_name: "codesearch.aelve.com"
+            error_page: false
+            server_without_port: true
 
           - name: codesearch-staging
             upstreams: [ 's1.staging.codesearch.aelve.com' ]
             listen_data: "{{ codesearch_staging_port }} ssl"
             server_name: "staging.codesearch.aelve.com"
-            error_page: "497 301 =307 https://$host$request_uri"
+            error_page: false
+            server_without_port: true
 
-          - name: codesearch
-            upstreams: [ 's1.codesearch.aelve.com' ]
-            listen_data: "{{ codesearch_port }} ssl"
-            server_name: "codesearch.aelve.com"
-            error_page: "497 301 =307 https://$host$request_uri"
+          - name: codesearch-portainer
+            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
+            listen_data: "{{ codesearch_portainer_port }} ssl"
+            server_name: "staging.codesearch.aelve.com"
+            port: "{{ codesearch_portainer_port }}"
+            error_page: true
+            server_without_port: false
 
           - name: guide-main
             upstreams: [ 's1.staging.guide.aelve.com:{{guide_main_port}}' ]
             listen_data: "{{ guide_main_port }} ssl"
             server_name: "staging.guide.aelve.com"
-            error_page: "497 301 =307 https://$host:{{ guide_main_port }}$request_uri"
+            port: "{{ guide_main_port }}"
+            error_page: true
+            server_without_port: false
 
           - name: guide-api
             upstreams: [ 's1.staging.guide.aelve.com:{{guide_api_port}}' ]
             listen_data: "{{ guide_api_port }} ssl"
             server_name: "staging.guide.aelve.com"
-            error_page: "497 301 =307 https://$host:{{ guide_api_port }}$request_uri"
+            port: "{{ guide_api_port }}"
+            error_page: true
+            server_without_port: false
 
           - name: guide-ekg
             upstreams: [ 's1.staging.guide.aelve.com:{{guide_ekg_port}}' ]
             listen_data: "{{ guide_ekg_port }} ssl"
             server_name: "staging.guide.aelve.com"
-            error_page: "497 301 =307 https://$host:{{ guide_ekg_port }}$request_uri"
+            port: "{{ guide_ekg_port }}"
+            error_page: true
+            server_without_port: false
 
     - include_role:
         name: geerlingguy.certbot
