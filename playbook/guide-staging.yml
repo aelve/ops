@@ -10,7 +10,7 @@
 - hosts: guide-staging
   become: true
 
-  name: Install docker, compose and keep it running if they don't.
+  name: Install Docker and run Guide from quay.io/aelve/guide
   pre_tasks:
     - include_role:
         name: geerlingguy.docker
