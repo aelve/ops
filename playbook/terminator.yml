@@ -19,49 +19,35 @@
         balancer_vhosts:
           - name: codesearch
             upstreams: [ 's1.codesearch.aelve.com' ]
-            listen: "{{ codesearch_port }} ssl"
             server_name: "codesearch.aelve.com"
-            error_page: false
-            server_without_port: true
 
           - name: codesearch-staging
             upstreams: [ 's1.staging.codesearch.aelve.com' ]
-            listen: "{{ codesearch_staging_port }} ssl"
             server_name: "staging.codesearch.aelve.com"
-            error_page: false
-            server_without_port: true
 
           - name: codesearch-portainer
             upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
-            listen: "{{ codesearch_portainer_port }} ssl"
             server_name: "staging.codesearch.aelve.com"
-            port: "{{ codesearch_portainer_port }}"
-            error_page: true
-            server_without_port: false
+            server_port: "{{ codesearch_portainer_port }}"
 
           - name: guide-main
-            upstreams: [ 's1.staging.guide.aelve.com:{{guide_main_port}}' ]
-            listen: "{{ guide_main_port }} ssl"
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_main_port }}' ]
             server_name: "staging.guide.aelve.com"
-            port: "{{ guide_main_port }}"
-            error_page: true
-            server_without_port: false
+
+          - name: guide-main-port
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_main_port }}' ]
+            server_name: "staging.guide.aelve.com"
+            server_port: "{{ guide_main_port }}"
 
           - name: guide-api
-            upstreams: [ 's1.staging.guide.aelve.com:{{guide_api_port}}' ]
-            listen: "{{ guide_api_port }} ssl"
+            server_port: "{{ guide_api_port }}"
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_api_port }}' ]
             server_name: "staging.guide.aelve.com"
-            port: "{{ guide_api_port }}"
-            error_page: true
-            server_without_port: false
 
           - name: guide-ekg
-            upstreams: [ 's1.staging.guide.aelve.com:{{guide_ekg_port}}' ]
-            listen: "{{ guide_ekg_port }} ssl"
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_ekg_port }}' ]
             server_name: "staging.guide.aelve.com"
-            port: "{{ guide_ekg_port }}"
-            error_page: true
-            server_without_port: false
+            server_port: "{{ guide_ekg_port }}"
 
     - include_role:
         name: geerlingguy.certbot
@@ -69,8 +55,8 @@
         certbot_admin_email: yom@artyom.me
         certbot_certs:
           - domains:
+              - staging.guide.aelve.com
+          - domains:
               - codesearch.aelve.com
           - domains:
               - staging.codesearch.aelve.com
-          - domains:
-              - staging.guide.aelve.com

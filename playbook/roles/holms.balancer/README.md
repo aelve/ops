@@ -23,44 +23,41 @@ balancer_ssl_pem         | *None*                                               
 balancer_ssl_crt         | *None*                                                                                                                                               | Path to CRT file
 balancer_ssl_trusted_crt | *None*                                                                                                                                               | Path to CRT file of your trusted ssl certificate
 balancer_ssl_trusted_key | *None*                                                                                                                                               | Path to KEY file of your trusted ssl certificate
-listen | "80 http2" | listen's value at main server block
 server_name | "yourserver.com" | server_name's value
-error_page | false | error_page's value
-port | None | Port's value used at error_page
-server_without_port | false | Switch second server block on. It used for a site with SSL and without any specific port.
+server_port | None | Port's value used at error_page
 
 You need to use either trusted certificates or self signed, using will fail your nginx config
 
 ## Example. Without specific port
 
-    - hosts: localhost
-      remote_user: root
-        - include_role:
-            name: holms.balancer
-          vars:
-            balancer_vhosts:
-              - name: codesearch
-                upstreams: [ 's1.codesearch.aelve.com' ]
-                listen: "{{ codesearch_port }} ssl"
-                server_name: "codesearch.aelve.com"
-                error_page: false
-                server_without_port: true
+    - include_role:
+        name: holms.balancer
+      vars:
+        balancer_vhosts:
+          - name: codesearch
+            upstreams: [ 's1.codesearch.aelve.com' ]
+            server_name: "codesearch.aelve.com"
 
 ## Example. With specific port
 
-    - hosts: localhost
-      remote_user: root
-        - include_role:
-            name: holms.balancer
-          vars:
-            balancer_vhosts:
-              - name: codesearch-portainer
-                upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
-                listen: "{{ codesearch_portainer_port }} ssl"
-                server_name: "staging.codesearch.aelve.com"
-                port: "{{ codesearch_portainer_port }}"
-                error_page: true
-                server_without_port: false
+    - include_role:
+        name: holms.balancer
+      vars:
+        balancer_vhosts:
+          - name: codesearch-portainer
+            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
+            server_name: "staging.codesearch.aelve.com"
+            server_port: "{{ codesearch_portainer_port }}"
+
+## Example. Redirect from 80 to specific port
+
+    - include_role:
+        name: holms.balancer
+      vars:
+        balancer_vhosts:
+          - name: codesearch-portainer
+            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
+            server_name: "staging.codesearch.aelve.com"
 
 Or generate `upstreams` list from inventory vars group.
 

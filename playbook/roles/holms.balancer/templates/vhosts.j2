@@ -6,11 +6,16 @@ upstream {{ item.name }} {
 }
 
 server {
-    listen         {{ item.listen }};
+
+{% if (item.server_port is not defined) %}
+    listen         443 ssl;
+{% else %}
+    listen         {{ item.server_port }} ssl;
+{% endif %}
     server_name    {{ item.server_name }};
 
-{% if item.error_page %}
-    error_page 497 301 =307 https://$host:{{ item.port }}$request_uri;
+{% if (item.server_port is defined) %}
+    error_page 497 301 =307 https://$host:{{ item.server_port }}$request_uri;
 {% endif %}
 
     location / {
@@ -32,13 +37,12 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
-{% if item.server_without_port %}
+{% if (item.server_port is not defined) %}
 
 server {
     if ($host = {{ item.server_name }}) {
         return 301 https://$host$request_uri;
     }
-
     listen         80;
     server_name    {{ item.server_name }};
     return 404;
