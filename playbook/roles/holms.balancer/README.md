@@ -23,53 +23,43 @@ balancer_ssl_pem         | *None*                                               
 balancer_ssl_crt         | *None*                                                                                                                                               | Path to CRT file
 balancer_ssl_trusted_crt | *None*                                                                                                                                               | Path to CRT file of your trusted ssl certificate
 balancer_ssl_trusted_key | *None*                                                                                                                                               | Path to KEY file of your trusted ssl certificate
+server_name | "yourserver.com" | server_name's value
+server_port | None | It defines your app specific port and apply HTTPS to it. If you need port by defualt (80) with default HTTPS port (443) you should skip this value.
 
 You need to use either trusted certificates or self signed, using will fail your nginx config
 
-## Example
+## Example. Without specific port
 
-```
-- hosts: localhost
-  remote_user: root
+    - include_role:
+        name: holms.balancer
+      vars:
+        balancer_vhosts:
+          - name: codesearch
+            upstreams: [ 's1.codesearch.aelve.com' ]
+            server_name: "codesearch.aelve.com"
 
-  vars:
-      - balancer_ssl_key: "/etc/ssl/certs/server.key"
-      - balancer_ssl_crt: "/etc/ssl/certs/server.crt"
-      - balancer_ssl_pem: "/etc/ssl/certs/server.pem"
-      - balancer_vhosts:
-        - { name: "my.project.com",  
-            upstreams: [
-               'node01.myproject.com',
-               'node02.myproject.com'
-            ]}
+## Example. With specific port
 
-  roles:
-      - { role: balancer }
-```
+    - include_role:
+        name: holms.balancer
+      vars:
+        balancer_vhosts:
+          - name: codesearch-portainer
+            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
+            server_name: "staging.codesearch.aelve.com"
+            server_port: "{{ codesearch_portainer_port }}"
+
+## Example. Redirect from 80 to specific port
+
+    - include_role:
+        name: holms.balancer
+      vars:
+        balancer_vhosts:
+          - name: codesearch-portainer
+            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
+            server_name: "staging.codesearch.aelve.com"
 
 Or generate `upstreams` list from inventory vars group.
-
-Inventory file:
-
-```
-[myproject]
-node[01:02].myproject.com
-```
-
-Playbook:
-
-```
-- hosts: localhost
-  remote_user: root
-    vars:
-        - balancer_ssl_key: "/etc/ssl/certs/server.key"
-        - balancer_ssl_crt: "/etc/ssl/certs/server.crt"
-        - balancer_ssl_pem: "/etc/ssl/certs/server.pem"
-        - balancer_vhosts:
-            - { name: "my.project.com",  upstreams: "{{ groups.myproject }}" }
-    roles:
-      - { role: balancer }
-```
 
 ## License
 

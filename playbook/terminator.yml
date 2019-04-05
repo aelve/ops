@@ -6,6 +6,10 @@
 # When adding a domain, don't forget to update both balancer_vhosts and
 # certbot_certs.
 
+# To certbot_certs's domains add server_name.
+
+# More info at playbook/roles/holms.balancer/defaults/main.yml
+
 - hosts: terminator
   tasks:
 
@@ -13,13 +17,37 @@
         name: holms.balancer
       vars:
         balancer_vhosts:
-          - { name: "codesearch.aelve.com", upstreams: ["s1.codesearch.aelve.com"] }
-          - { name: "staging.codesearch.aelve.com", upstreams: ["s1.staging.codesearch.aelve.com"] }
+          - name: codesearch
+            upstreams: [ 's1.codesearch.aelve.com' ]
+            server_name: "codesearch.aelve.com"
 
-    - name: Install certbot-nginx
-      apt:
-        name: python-certbot-nginx
-        update_cache: yes
+          - name: codesearch-staging
+            upstreams: [ 's1.staging.codesearch.aelve.com' ]
+            server_name: "staging.codesearch.aelve.com"
+
+          - name: codesearch-portainer
+            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
+            server_name: "staging.codesearch.aelve.com"
+            server_port: "{{ codesearch_portainer_port }}"
+
+          - name: guide-main
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_main_port }}' ]
+            server_name: "staging.guide.aelve.com"
+
+          - name: guide-main-port
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_main_port }}' ]
+            server_name: "staging.guide.aelve.com"
+            server_port: "{{ guide_main_port }}"
+
+          - name: guide-api
+            server_port: "{{ guide_api_port }}"
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_api_port }}' ]
+            server_name: "staging.guide.aelve.com"
+
+          - name: guide-ekg
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_ekg_port }}' ]
+            server_name: "staging.guide.aelve.com"
+            server_port: "{{ guide_ekg_port }}"
 
     - include_role:
         name: geerlingguy.certbot
@@ -27,5 +55,8 @@
         certbot_admin_email: yom@artyom.me
         certbot_certs:
           - domains:
+              - staging.guide.aelve.com
+          - domains:
               - codesearch.aelve.com
+          - domains:
               - staging.codesearch.aelve.com

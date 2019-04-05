@@ -1,0 +1,37 @@
+#
+# This playbook installs a docker, composes and keeps it running.
+# Then it fetches pointed in the host an image of Guide from quay.io,
+# runs a container, and starts the Guide.
+# And all of them will restarted if a server rebooted.
+#
+# Launch sites on http not https.
+#
+
+- hosts: guide-staging
+  become: true
+
+  name: Install Docker and run Guide from quay.io/aelve/guide
+  pre_tasks:
+    - include_role:
+        name: geerlingguy.docker
+    - include_role:
+        name: geerlingguy.pip
+      vars:
+        pip_package: python3-pip
+        pip_install_packages:
+          - name: docker
+
+  tasks:
+    - name: Fetch image from quay.io and ensure a container is running.
+      docker_container:
+        name: guide
+        image: "quay.io/aelve/guide:{{guide_image_name}}"
+        pull: true
+        state: started
+        restart: true
+        restart_policy: always
+        command: "./guide"
+        ports:
+          - "{{guide_main_port}}:{{guide_main_port}}"
+          - "{{guide_api_port}}:{{guide_api_port}}"
+          - "{{guide_ekg_port}}:{{guide_ekg_port}}"

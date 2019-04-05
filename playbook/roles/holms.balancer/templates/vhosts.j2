@@ -6,8 +6,19 @@ upstream {{ item.name }} {
 }
 
 server {
-    listen         80;
-    server_name    {{ item.name }};
+
+{% if ( (item.server_port is not defined) or
+        (item.server_port == 80) ) %}
+    listen         443 ssl;
+{% else %}
+    listen         {{ item.server_port }} ssl;
+{% endif %}
+    server_name    {{ item.server_name }};
+
+{% if ( (item.server_port is defined) and
+        ( item.server_port != 80) )  %}
+    error_page 497 301 =307 https://$host:{{ item.server_port }}$request_uri;
+{% endif %}
 
     location / {
         proxy_pass http://{{ item.name }};
@@ -21,4 +32,23 @@ server {
         proxy_cache off;
         client_max_body_size 200M;
     }
+
+    ssl_certificate /etc/letsencrypt/live/{{ item.server_name }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ item.server_name }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
+
+{% if ( (item.server_port is not defined) or
+        ( item.server_port == 80) )  %}
+
+server {
+    if ($host = {{ item.server_name }}) {
+        return 301 https://$host$request_uri;
+    }
+    listen         80;
+    server_name    {{ item.server_name }};
+    return 404;
+}
+
+{% endif %}

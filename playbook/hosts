@@ -3,9 +3,19 @@ terminator.aelve.com
 guide.aelve.com
 s1.codesearch.aelve.com
 s1.staging.codesearch.aelve.com
+s1.staging.guide.aelve.com
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+guide_main_port=8080
+guide_api_port=4400
+guide_ekg_port=5050
+guide_image_name=develop--back
+codesearch_portainer_port=9080
 
 [terminator]
 terminator.aelve.com
 
-[all:vars]
-ansible_python_interpreter=/usr/bin/python3
+[guide-staging]
+s1.staging.guide.aelve.com
+
