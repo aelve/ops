@@ -7,14 +7,16 @@ upstream {{ item.name }} {
 
 server {
 
-{% if (item.server_port is not defined) %}
+{% if ( (item.server_port is not defined) or
+        (item.server_port == 80) ) %}
     listen         443 ssl;
 {% else %}
     listen         {{ item.server_port }} ssl;
 {% endif %}
     server_name    {{ item.server_name }};
 
-{% if (item.server_port is defined) %}
+{% if ( (item.server_port is defined) and
+        ( item.server_port != 80) )  %}
     error_page 497 301 =307 https://$host:{{ item.server_port }}$request_uri;
 {% endif %}
 
@@ -37,7 +39,8 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
-{% if (item.server_port is not defined) %}
+{% if ( (item.server_port is not defined) or
+        ( item.server_port == 80) )  %}
 
 server {
     if ($host = {{ item.server_name }}) {
