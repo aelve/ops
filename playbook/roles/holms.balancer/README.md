@@ -24,7 +24,7 @@ balancer_ssl_crt         | *None*                                               
 balancer_ssl_trusted_crt | *None*                                                                                                                                               | Path to CRT file of your trusted ssl certificate
 balancer_ssl_trusted_key | *None*                                                                                                                                               | Path to KEY file of your trusted ssl certificate
 server_name | "yourserver.com" | server_name's value
-server_port | None | Port's value used at error_page
+server_port | None | It defines your app specific port and apply HTTPS to it. If you need port by defualt (80) with default HTTPS port (443) you should skip this value.
 
 You need to use either trusted certificates or self signed, using will fail your nginx config
 

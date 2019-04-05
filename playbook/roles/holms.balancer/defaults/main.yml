@@ -11,5 +11,5 @@ balancer_ssl_trusted_key: ""
 # See innards at playbook/roles/holms.balancer/templates/vhosts.j2
 # See readme for examples.
 server_name: "yourserver1.com"
-server_port: 80
+server_port: ""
 
