@@ -19,21 +19,21 @@
         balancer_vhosts:
           - name: codesearch
             upstreams: [ 's1.codesearch.aelve.com' ]
-            listen_data: "{{ codesearch_port }} ssl"
+            listen: "{{ codesearch_port }} ssl"
             server_name: "codesearch.aelve.com"
             error_page: false
             server_without_port: true
 
           - name: codesearch-staging
             upstreams: [ 's1.staging.codesearch.aelve.com' ]
-            listen_data: "{{ codesearch_staging_port }} ssl"
+            listen: "{{ codesearch_staging_port }} ssl"
             server_name: "staging.codesearch.aelve.com"
             error_page: false
             server_without_port: true
 
           - name: codesearch-portainer
             upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
-            listen_data: "{{ codesearch_portainer_port }} ssl"
+            listen: "{{ codesearch_portainer_port }} ssl"
             server_name: "staging.codesearch.aelve.com"
             port: "{{ codesearch_portainer_port }}"
             error_page: true
@@ -41,7 +41,7 @@
 
           - name: guide-main
             upstreams: [ 's1.staging.guide.aelve.com:{{guide_main_port}}' ]
-            listen_data: "{{ guide_main_port }} ssl"
+            listen: "{{ guide_main_port }} ssl"
             server_name: "staging.guide.aelve.com"
             port: "{{ guide_main_port }}"
             error_page: true
@@ -49,7 +49,7 @@
 
           - name: guide-api
             upstreams: [ 's1.staging.guide.aelve.com:{{guide_api_port}}' ]
-            listen_data: "{{ guide_api_port }} ssl"
+            listen: "{{ guide_api_port }} ssl"
             server_name: "staging.guide.aelve.com"
             port: "{{ guide_api_port }}"
             error_page: true
@@ -57,7 +57,7 @@
 
           - name: guide-ekg
             upstreams: [ 's1.staging.guide.aelve.com:{{guide_ekg_port}}' ]
-            listen_data: "{{ guide_ekg_port }} ssl"
+            listen: "{{ guide_ekg_port }} ssl"
             server_name: "staging.guide.aelve.com"
             port: "{{ guide_ekg_port }}"
             error_page: true
