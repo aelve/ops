@@ -21,11 +21,16 @@
             upstreams: [ 's1.codesearch.aelve.com' ]
             server_name: "codesearch.aelve.com"
 
+          - name: codesearch-portainer
+            upstreams: [ 's1.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
+            server_name: "codesearch.aelve.com"
+            server_port: "{{ codesearch_portainer_port }}"
+
           - name: codesearch-staging
             upstreams: [ 's1.staging.codesearch.aelve.com' ]
             server_name: "staging.codesearch.aelve.com"
 
-          - name: codesearch-portainer
+          - name: codesearch-staging-portainer
             upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
             server_name: "staging.codesearch.aelve.com"
             server_port: "{{ codesearch_portainer_port }}"
