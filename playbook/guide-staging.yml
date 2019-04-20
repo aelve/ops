@@ -22,16 +22,28 @@
           - name: docker
 
   tasks:
-    - name: Fetch image from quay.io and ensure a container is running.
+    - name: Fetch back from quay.io and ensure a container is running.
       docker_container:
         name: guide
-        image: "quay.io/aelve/guide:{{guide_image_name}}"
+        image: "quay.io/aelve/guide:{{guide_back_image}}"
         pull: true
         state: started
         restart: true
         restart_policy: always
         command: "./guide"
         ports:
-          - "{{guide_main_port}}:{{guide_main_port}}"
-          - "{{guide_api_port}}:{{guide_api_port}}"
-          - "{{guide_ekg_port}}:{{guide_ekg_port}}"
+          - "{{guide_back_main_port}}:{{guide_back_main_port}}"
+          - "{{guide_back_api_port}}:{{guide_back_api_port}}"
+          - "{{guide_back_ekg_port}}:{{guide_back_ekg_port}}"
+
+    - name: Fetch front from quay.io and ensure a container is running.
+      docker_container:
+        name: front
+        image: "quay.io/aelve/guide:{{guide_front_image}}"
+        pull: true
+        state: started
+        restart: true
+        restart_policy: always
+        command: "node ./dist/server"
+        ports:
+          - "{{guide_front_port}}:{{guide_front_port}}"
