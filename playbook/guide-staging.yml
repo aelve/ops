@@ -22,7 +22,7 @@
           - name: docker
 
   tasks:
-    - name: Fetch back from quay.io and ensure a container is running.
+    - name: Pull the backend docker image and restart container.
       docker_container:
         name: guide
         image: "quay.io/aelve/guide:{{guide_back_image}}"
@@ -36,7 +36,7 @@
           - "{{guide_back_api_port}}:{{guide_back_api_port}}"
           - "{{guide_back_ekg_port}}:{{guide_back_ekg_port}}"
 
-    - name: Fetch front from quay.io and ensure a container is running.
+    - name: Pull the frontend docker image and restart container.
       docker_container:
         name: front
         image: "quay.io/aelve/guide:{{guide_front_image}}"
