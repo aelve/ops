@@ -21,38 +21,33 @@
             upstreams: [ 's1.codesearch.aelve.com' ]
             server_name: "codesearch.aelve.com"
 
-          - name: codesearch-portainer
-            upstreams: [ 's1.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
-            server_name: "codesearch.aelve.com"
-            server_port: "{{ codesearch_portainer_port }}"
-
           - name: codesearch-staging
             upstreams: [ 's1.staging.codesearch.aelve.com' ]
             server_name: "staging.codesearch.aelve.com"
 
-          - name: codesearch-staging-portainer
+          - name: codesearch-portainer
             upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
             server_name: "staging.codesearch.aelve.com"
             server_port: "{{ codesearch_portainer_port }}"
 
-          - name: guide-main
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_main_port }}' ]
+          - name: guide-front
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_front_port }}' ]
             server_name: "staging.guide.aelve.com"
 
-          - name: guide-main-port
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_main_port }}' ]
+          - name: guide-main
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_back_main_port }}' ]
             server_name: "staging.guide.aelve.com"
-            server_port: "{{ guide_main_port }}"
+            server_port: "{{ guide_back_main_port }}"
 
           - name: guide-api
-            server_port: "{{ guide_api_port }}"
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_api_port }}' ]
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_back_api_port }}' ]
             server_name: "staging.guide.aelve.com"
+            server_port: "{{ guide_back_api_port }}"
 
           - name: guide-ekg
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_ekg_port }}' ]
+            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_back_ekg_port }}' ]
             server_name: "staging.guide.aelve.com"
-            server_port: "{{ guide_ekg_port }}"
+            server_port: "{{ guide_back_ekg_port }}"
 
     - include_role:
         name: geerlingguy.certbot
