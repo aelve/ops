@@ -9,15 +9,10 @@
         user: root
         key: '{{ item }}'
       with_items:
-        # Artyom
-        - https://github.com/neongreen.keys
         # the Guide team
         - https://github.com/willbasky.keys
-        - https://github.com/mixailflash.keys
-        - https://github.com/Gigiman.keys
         - https://github.com/avele.keys
         - https://github.com/kana-sama.keys 
-        - https://github.com/vojiranto.keys
         # the Codesearch team
         - https://github.com/Kabowyad.keys
         - https://github.com/kamilongus.keys
@@ -25,3 +20,5 @@
         - https://github.com/Som3.keys
         - https://github.com/ppressives.keys
         - https://github.com/lorof.keys
+        # misc
+        - https://github.com/neongreen.keys  # Artyom
