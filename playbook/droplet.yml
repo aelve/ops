@@ -1,0 +1,93 @@
+---
+- hosts: digitalocean
+
+  vars:
+    api_token: ""
+
+    ssh_key_password: ""
+    ssh_key_name: do_id_rsa
+
+    region_id: ams3
+    image_id: ubuntu-18-04-x64
+
+    codesearch_size_id: 4gb
+    codesearch_prod_droplet_name: codesearch-test
+    codesearch_staging_droplet_name: codesearch-staging
+    codesearch_storage_block_size: 50
+
+  tasks:
+    - name: Check if SSH key exists
+      local_action: stat path="~/.ssh/{{ ssh_key_name }}"
+      register: private_ssh_key
+
+    - name: Generate new SSH key
+      local_action: command ssh-keygen -q -t rsa -b 2048 -N "{{ ssh_key_password }}" -f ~/.ssh/{{ ssh_key_name }} -C ""
+      when: not private_ssh_key.stat.exists
+
+    - name: Register the SSH key
+      digital_ocean:
+        command: ssh
+        state: present
+        name: "{{ ssh_key_name }}"
+        ssh_pub_key: "{{ lookup('file', '~/.ssh/{{ ssh_key_name }}.pub') }}"
+        api_token: "{{ api_token }}"
+      register: public_ssh_key
+
+    - name: Creates Codesearch production droplet
+      digital_ocean:
+        state: present
+        command: droplet
+        api_token: "{{ api_token }}"
+        ssh_key_ids: "{{ public_ssh_key.ssh_key.id }}"
+        name: "{{ codesearch_prod_droplet_name }}"
+        unique_name: yes
+        region_id: "{{ region_id }}"
+        size_id: "{{ codesearch_size_id }}"
+        image_id: "{{ image_id }}"
+        wait: yes
+      register: digital_ocean
+
+    - name: Add block storage
+      digital_ocean_block_storage:
+        state: present
+        command: create
+        api_token: "{{ api_token }}"
+        region: "{{ region_id }}"
+        block_size: "{{ codesearch_storage_block_size }}"
+        volume_name: "{{ region_id }}-block-storage"
+      when: codesearch_storage_block_size > 0
+
+    - name: Attach block storage to host
+      digital_ocean_block_storage:
+        state: present
+        command: attach
+        api_token: "{{ api_token }}"
+        volume_name: "{{ region_id }}-block-storage"
+        region: "{{ region_id }}"
+        droplet_id: "{{ digital_ocean.droplet.id }}"
+      when: codesearch_storage_block_size > 0
+
+#    - name: format /dev/sda for xfs
+#      filesystem:
+#        fstype: xfs
+#        dev: /dev/sda
+#
+#    - name: update /etc/fstab
+#      mount:
+#        name: /vol
+#        src: /dev/sda
+#        fstype: xfs
+#        state: mounted
+
+    - name: Add new host to inventory
+      add_host:
+        name: "{{ digital_ocean.droplet.ip_address }}"
+        group: droplets
+        ansible_ssh_user: root
+        ansible_ssh_host: "{{ digital_ocean.droplet.ip_address }}"
+        ansible_ssh_private_key_file: "~/.ssh/{{ ssh_key_name }}"
+      when: digital_ocean.droplet is defined
+
+    - debug: msg="Droplet {{ digital_ocean.droplet.id }} online with SSH key {{ public_ssh_key.ssh_key.id }}."
+    - debug: msg="IP is {{ digital_ocean.droplet.ip_address }}"
+

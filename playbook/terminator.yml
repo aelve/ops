@@ -12,7 +12,6 @@
 
 - hosts: terminator
   tasks:
-
     - include_role:
         name: holms.balancer
       vars:

@@ -21,3 +21,7 @@ terminator.aelve.com
 [guide-staging]
 s1.staging.guide.aelve.com
 
+[digitalocean]
+localhost ansible_python_interpreter=python
+localhost ansible_connection=local
+
