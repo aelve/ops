@@ -57,7 +57,7 @@
     - include_role:
         name: geerlingguy.certbot
       vars:
-        certbot_admin_email: yom@artyom.me
+        certbot_admin_email: artyom@aelve.com
         certbot_certs:
           - domains:
               - staging.guide.aelve.com
