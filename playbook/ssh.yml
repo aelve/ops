@@ -8,6 +8,7 @@
       authorized_key:
         user: root
         key: '{{ item }}'
+        exclusive: True
       with_items:
         # the Guide team
         - https://github.com/willbasky.keys
