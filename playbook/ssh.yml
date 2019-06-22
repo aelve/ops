@@ -3,23 +3,32 @@
 # Set up SSH keys on our machines.
 
 - hosts: all
+  gather_facts: no
+  vars:
+    ssh_keys_links:
+      # the Guide team
+      - https://github.com/willbasky.keys
+      - https://github.com/avele.keys
+      - https://github.com/kana-sama.keys
+      # the Codesearch team
+      - https://github.com/Kabowyad.keys
+      - https://github.com/kamilongus.keys
+      - https://github.com/Evengining.keys
+      - https://github.com/Som3.keys
+      - https://github.com/ppressives.keys
+      - https://github.com/lorof.keys
+      # misc
+      - https://github.com/neongreen.keys  # Artyom
+
+  # The authorized_key module with the exclusive option is not loop aware.
+  # Read more in doc: https://docs.ansible.com/ansible/latest/modules/authorized_key_module.html
   tasks:
-    - name: Add all SSH keys without removing previous ones
+    - set_fact:
+        ssh_keys_list: "{{ (ssh_keys | default([])) + [ lookup('url', item) ] }}"
+      with_items: "{{ ssh_keys_links }}"
+
+    - name: Add all SSH keys with removing all other non-specified keys from the authorized_keys file
       authorized_key:
         user: root
-        key: '{{ item }}'
-      with_items:
-        # the Guide team
-        - https://github.com/willbasky.keys
-        - https://github.com/avele.keys
-        - https://github.com/kana-sama.keys
-        # the Codesearch team
-        - https://github.com/Kabowyad.keys
-        - https://github.com/kamilongus.keys
-        - https://github.com/Evengining.keys
-        - https://github.com/Som3.keys
-        - https://github.com/ppressives.keys
-        - https://github.com/lorof.keys
-        - https://github.com/avasyukhin.keys
-        # misc
-        - https://github.com/neongreen.keys  # Artyom
+        key: "{{ ssh_keys_list | join('\n') }}"
+        exclusive: True
