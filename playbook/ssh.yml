@@ -2,24 +2,39 @@
 
 # Set up SSH keys on our machines.
 
-- hosts: all
+# The 'authorized_key' module with the 'exclusive' option is not loop aware,
+# so we have to collect all keys first and set them with 'authorized_key' in
+# one go. Read more in docs:
+# https://docs.ansible.com/ansible/latest/modules/authorized_key_module.html
+- hosts: localhost
+  gather_facts: no
+  vars:
+    ssh_keys_links:
+      # the Guide team
+      - https://github.com/willbasky.keys
+      - https://github.com/avele.keys
+      - https://github.com/kana-sama.keys
+      # the Codesearch team
+      - https://github.com/Kabowyad.keys
+      - https://github.com/kamilongus.keys
+      - https://github.com/Evengining.keys
+      - https://github.com/Som3.keys
+      - https://github.com/ppressives.keys
+      - https://github.com/lorof.keys
+      # misc
+      - https://github.com/neongreen.keys  # Artyom
+
   tasks:
-    - name: Add all SSH keys without removing previous ones
+    - name: Collect SSH keys from GitHub
+      set_fact:
+        ssh_keys_list: "{{ (ssh_keys_list | default([]) | list) + lookup('url', item, wantlist=true) }}"
+      with_items: "{{ ssh_keys_links }}"
+
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Add all SSH keys while removing all other non-specified keys from the authorized_keys file
       authorized_key:
         user: root
-        key: '{{ item }}'
-      with_items:
-        # the Guide team
-        - https://github.com/willbasky.keys
-        - https://github.com/avele.keys
-        - https://github.com/kana-sama.keys
-        # the Codesearch team
-        - https://github.com/Kabowyad.keys
-        - https://github.com/kamilongus.keys
-        - https://github.com/Evengining.keys
-        - https://github.com/Som3.keys
-        - https://github.com/ppressives.keys
-        - https://github.com/lorof.keys
-        - https://github.com/avasyukhin.keys
-        # misc
-        - https://github.com/neongreen.keys  # Artyom
+        key: "{{ hostvars['localhost']['ssh_keys_list'] | join('\n') }}"
+        exclusive: True
