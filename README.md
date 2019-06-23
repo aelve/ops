@@ -9,3 +9,9 @@ This repository contains scripts and playbooks and whatever. [See instructions i
   * `ansible-playbook playbook/ssh.yml` -- add Aelve members' SSH keys to various machines. Rerun it during onboarding.
 
   * `ansible-playbook playbook/terminator.yml` -- set up a SSL terminator. Rerun it whenever a domain is added.
+
+## Troubleshooting
+
+### Ansible playbooks are stuck with `[__NSPlaceholderDate initialize] may have been in progress in another thread when fork() was called.`
+
+Run `export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` before running the playbook.
