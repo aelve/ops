@@ -24,7 +24,7 @@
   # Read more in doc: https://docs.ansible.com/ansible/latest/modules/authorized_key_module.html
   tasks:
     - set_fact:
-        ssh_keys_list: "{{ (ssh_keys | default([])) + [ lookup('url', item) ] }}"
+        ssh_keys_list: "{{ (ssh_keys_list | default([])) + lookup('url', item).split(',') }}"
       with_items: "{{ ssh_keys_links }}"
 
     - name: Add all SSH keys with removing all other non-specified keys from the authorized_keys file
