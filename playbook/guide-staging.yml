@@ -1,8 +1,9 @@
+# Run this playbook to deploy or update Guide.
 #
-# This playbook installs a docker, composes and keeps it running.
-# Then it fetches pointed in the host an image of Guide from quay.io,
-# runs a container, and starts the Guide.
-# And all of them will restarted if a server rebooted.
+# During deployment, this playbook installs Docker, composes and keeps it
+# running. Then it fetches pointed in the host an image of Guide from
+# quay.io, runs a container, and starts the Guide. And all of them will
+# restarted if a server rebooted.
 #
 # Launch sites on http not https.
 #
