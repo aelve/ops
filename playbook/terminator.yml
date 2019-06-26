@@ -1,58 +1,77 @@
 ---
 
-# Set up a load balancer and SSL terminator. All our domains should point
-# there and then traffic would be rerouted to the right machines.
-
-# When adding a domain, don't forget to update both balancer_vhosts and
+# Set up a load balancer and SSL terminator. All our domains should point to
+# 'terminator', which reroutes traffic to the right machines.
+#
+# When adding a domain, don't forget to update both nginx_vhosts and
 # certbot_certs.
-
-# To certbot_certs's domains add server_name.
-
-# More info at playbook/roles/holms.balancer/defaults/main.yml
 
 - hosts: terminator
   tasks:
 
     - include_role:
-        name: holms.balancer
+        name: geerlingguy.nginx
       vars:
-        balancer_vhosts:
+        nginx_remove_default_vhost: true
+        nginx_upstreams:
           - name: codesearch
-            upstreams: [ 's1.codesearch.aelve.com' ]
-            server_name: "codesearch.aelve.com"
-
-          - name: codesearch-portainer
-            upstreams: [ 's1.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
-            server_name: "codesearch.aelve.com"
-            server_port: "{{ codesearch_portainer_port }}"
-
+            servers: { "s1.codesearch.aelve.com" }
           - name: codesearch-staging
-            upstreams: [ 's1.staging.codesearch.aelve.com' ]
-            server_name: "staging.codesearch.aelve.com"
+            servers: { "s1.staging.codesearch.aelve.com" }
+          - name: guide-staging
+            servers: { "s1.staging.guide.aelve.com" }
 
-          - name: codesearch-staging-portainer
-            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
-            server_name: "staging.codesearch.aelve.com"
-            server_port: "{{ codesearch_portainer_port }}"
+        nginx_vhosts:
+          # Codesearch
+          - server_name: "codesearch.aelve.com"
+            extra_parameters: |
+              location / {
+                proxy_pass http://codesearch;
+              }
+          - server_name: "codesearch.aelve.com"
+            listen: "{{ codesearch_portainer_port }}"
+            extra_parameters: |
+              location / {
+                proxy_pass http://codesearch:{{ codesearch_portainer_port }};
+              }
 
-          - name: guide-front
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_front_port }}' ]
-            server_name: "staging.guide.aelve.com"
+          # Codesearch staging
+          - server_name: "staging.codesearch.aelve.com"
+            extra_parameters: |
+              location / {
+                proxy_pass http://codesearch-staging;
+              }
+          - server_name: "staging.codesearch.aelve.com"
+            listen: "{{ codesearch_portainer_port }}"
+            extra_parameters: |
+              location / {
+                proxy_pass http://codesearch-staging:{{ codesearch_portainer_port }};
+              }
 
-          - name: guide-main
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_back_main_port }}' ]
-            server_name: "staging.guide.aelve.com"
-            server_port: "{{ guide_back_main_port }}"
-
-          - name: guide-api
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_back_api_port }}' ]
-            server_name: "staging.guide.aelve.com"
-            server_port: "{{ guide_back_api_port }}"
-
-          - name: guide-ekg
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_back_ekg_port }}' ]
-            server_name: "staging.guide.aelve.com"
-            server_port: "{{ guide_back_ekg_port }}"
+          # Guide staging
+          - server_name: "staging.guide.aelve.com"
+            extra_parameters: |
+              location / {
+                proxy_pass http://guide-staging:{{ guide_front_port }};
+              }
+          - server_name: "staging.guide.aelve.com"
+            listen: "{{ guide_back_main_port }}"
+            extra_parameters: |
+              location / {
+                proxy_pass http://guide-staging:{{ guide_back_main_port }};
+              }
+          - server_name: "staging.guide.aelve.com"
+            listen: "{{ guide_back_api_port }}"
+            extra_parameters: |
+              location / {
+                proxy_pass http://guide-staging:{{ guide_back_api_port }};
+              }
+          - server_name: "staging.guide.aelve.com"
+            listen: "{{ guide_back_ekg_port }}"
+            extra_parameters: |
+              location / {
+                proxy_pass http://guide-staging:{{ guide_back_ekg_port }};
+              }
 
     - include_role:
         name: geerlingguy.certbot
