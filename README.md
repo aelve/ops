@@ -10,6 +10,8 @@ This repository contains scripts and playbooks and whatever. [See instructions i
 
   * `ansible-playbook playbook/terminator.yml` -- set up a SSL terminator. Rerun it whenever a domain is added.
 
+  * `ansible-playbook playbook/guide-staging.yml` -- deploy or update `staging.guide.aelve.com`.
+
 ## Troubleshooting
 
 ### Ansible playbooks are stuck with `[__NSPlaceholderDate initialize] may have been in progress in another thread when fork() was called.`
