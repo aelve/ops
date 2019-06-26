@@ -60,8 +60,6 @@
         certbot_admin_email: artyom@aelve.com
         certbot_certs:
           - domains:
-              - staging.guide.aelve.com
-          - domains:
               - codesearch.aelve.com
-          - domains:
               - staging.codesearch.aelve.com
+              - staging.guide.aelve.com
