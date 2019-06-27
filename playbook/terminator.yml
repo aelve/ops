@@ -2,98 +2,127 @@
 
 # Set up a load balancer and SSL terminator. All our domains should point to
 # 'terminator', which reroutes traffic to the right machines.
-#
-# When adding a domain, don't forget to update both nginx_vhosts and
-# certbot_certs.
 
-- hosts: terminator
+- hosts: terminator-test
+
+  vars:
+    terminator_vhosts:
+      - name: codesearch
+        domain: codesearch.aelve.com
+        port: "443"
+        upstream: s1.codesearch.aelve.com
+
+      - name: codesearch-portainer
+        domain: codesearch.aelve.com
+        port: "{{ codesearch_portainer_port }}"
+        upstream: "s1.codesearch.aelve.com:{{ codesearch_portainer_port }}"
+
+      - name: codesearch-staging
+        domain: staging.codesearch.aelve.com
+        port: "443"
+        upstream: "s1.staging.codesearch.aelve.com"
+
+      - name: codesearch-staging-portainer
+        domain: staging.codesearch.aelve.com
+        port: "{{ codesearch_portainer_port }}"
+        upstream: "s1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}"
+
+      - name: guide-staging
+        domain: staging.guide.aelve.com
+        port: "443"
+        upstream: "s1.staging.guide.aelve.com:{{ guide_front_port }}"
+
+      - name: guide-staging-main
+        domain: staging.guide.aelve.com
+        port: "{{ guide_back_main_port }}"
+        upstream: "s1.staging.guide.aelve.com:{{ guide_back_main_port }}"
+
+      - name: guide-staging-api
+        domain: staging.guide.aelve.com
+        port: "{{ guide_back_api_port }}"
+        upstream: "s1.staging.guide.aelve.com:{{ guide_back_api_port }}"
+
+      - name: guide-staging-ekg
+        domain: staging.guide.aelve.com
+        port: "{{ guide_back_ekg_port }}"
+        upstream: "s1.staging.guide.aelve.com:{{ guide_back_ekg_port }}"
+
   tasks:
+
+    # Create configs to proxy all upstream servers locally, e.g.
+    # http://codesearch -> s1.codesearch.aelve.com
+    - set_fact:
+        upstream:
+          name: "{{ item.name }}"
+          servers: [ "{{ item.upstream }}" ]
+      loop: "{{ terminator_vhosts }}"
+      register: upstreams_fact
+
+    # (See https://stackoverflow.com/a/43633611/615030)
+    - set_fact:
+        upstreams: >-
+          {{ upstreams_fact | json_query('results[*].ansible_facts.upstream') | list }}
+
+    # Create a config for each vhost, pointing to one of the upstreams
+    - set_fact:
+        vhost:
+          server_name: "{{ item.domain }}"
+          listen: "{{ item.port }} ssl"
+          # Detect HTTP traffic and redirect to HTTPS
+          error_page: "497 301 =307 https://$host:{{ item.port }}$request_uri;"
+          extra_parameters: |
+            location / { proxy_pass http://{{ item.name }}; }
+          filename: "{{ item.name }}.conf"
+          # TODO: SSL cert
+      loop: "{{ terminator_vhosts }}"
+      register: vhosts_fact
+
+    - set_fact:
+        vhosts: >-
+          {{ vhosts_fact | json_query('results[*].ansible_facts.vhost') | list }}
+
+    # Create 80->443 redirects for items with port=443
+    - set_fact:
+        redirect:
+          server_name: "{{ item.domain }}"
+          listen: "80"
+          return: "301 https://{{ item.domain }}$request_uri"
+          filename: "{{ item.name }}_http_redirect.conf"
+      loop: "{{ terminator_vhosts }}"
+      when: item.port == "443"
+      register: redirects_fact
+
+    - set_fact:
+        redirects: >-
+          {{ redirects_fact | json_query('results[*].ansible_facts.redirect') | list }}
+
+    # Set up Nginx
+    - name: Remove old Nginx vhosts
+      shell: "/bin/rm -rf /etc/nginx/sites-enabled/*"
+      args:
+        warn: false
 
     - include_role:
         name: geerlingguy.nginx
       vars:
         nginx_remove_default_vhost: true
-        nginx_upstreams:
-          # Codesearch
-          - name: codesearch
-            servers: [ "s1.codesearch.aelve.com" ]
-          - name: codesearch-portainer
-            servers: [ "s1.codesearch.aelve.com:{{ codesearch_portainer_port }}" ]
+        nginx_upstreams: "{{ upstreams }}"
+        nginx_vhosts: "{{ vhosts + redirects }}"
 
-          # Codesearch staging
-          - name: codesearch-staging
-            servers: [ "s1.staging.codesearch.aelve.com" ]
-          - name: codesearch-staging-portainer
-            servers: [ "s1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}" ]
+    # Gather domains to be used with certbot
+    - set_fact:
+        domain: "{{ item.domain }}"
+      loop: "{{ terminator_vhosts }}"
+      register: domains_fact
 
-          # Guide staging
-          - name: guide-staging-front
-            servers: [ "s1.staging.guide.aelve.com:{{ guide_front_port }}" ]
-          - name: guide-staging-main
-            servers: [ "s1.staging.guide.aelve.com:{{ guide_back_main_port }}" ]
-          - name: guide-staging-api
-            servers: [ "s1.staging.guide.aelve.com:{{ guide_back_api_port }}" ]
-          - name: guide-staging-ekg
-            servers: [ "s1.staging.guide.aelve.com:{{ guide_back_ekg_port }}" ]
+    - set_fact:
+        domains: >-
+          {{ domains_fact | json_query('results[*].ansible_facts.domain') | list | unique }}
 
-        nginx_vhosts:
-          # Codesearch
-          - server_name: "codesearch.aelve.com"
-            extra_parameters: |
-              location / {
-                proxy_pass http://codesearch;
-              }
-          - server_name: "codesearch.aelve.com"
-            listen: "{{ codesearch_portainer_port }}"
-            extra_parameters: |
-              location / {
-                proxy_pass http://codesearch-portainer;
-              }
-
-          # Codesearch staging
-          - server_name: "staging.codesearch.aelve.com"
-            extra_parameters: |
-              location / {
-                proxy_pass http://codesearch-staging;
-              }
-          - server_name: "staging.codesearch.aelve.com"
-            listen: "{{ codesearch_portainer_port }}"
-            extra_parameters: |
-              location / {
-                proxy_pass http://codesearch-staging-portainer;
-              }
-
-          # Guide staging
-          - server_name: "staging.guide.aelve.com"
-            extra_parameters: |
-              location / {
-                proxy_pass http://guide-staging-front;
-              }
-          - server_name: "staging.guide.aelve.com"
-            listen: "{{ guide_back_main_port }}"
-            extra_parameters: |
-              location / {
-                proxy_pass http://guide-staging-main;
-              }
-          - server_name: "staging.guide.aelve.com"
-            listen: "{{ guide_back_api_port }}"
-            extra_parameters: |
-              location / {
-                proxy_pass http://guide-staging-api;
-              }
-          - server_name: "staging.guide.aelve.com"
-            listen: "{{ guide_back_ekg_port }}"
-            extra_parameters: |
-              location / {
-                proxy_pass http://guide-staging-ekg;
-              }
-
+    # Set up certbot
     - include_role:
         name: geerlingguy.certbot
       vars:
         certbot_admin_email: artyom@aelve.com
         certbot_certs:
-          - domains:
-              - codesearch.aelve.com
-              - staging.codesearch.aelve.com
-              - staging.guide.aelve.com
+          - domains: "{{ domains }}"
