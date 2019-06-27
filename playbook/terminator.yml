@@ -113,8 +113,9 @@
         nginx_remove_default_vhost: true
         nginx_upstreams: "{{ upstreams }}"
         nginx_vhosts: "{{ vhosts + redirects }}"
+        nginx_service_state: stopped
 
-    # Gather domains to be used with certbot
+    # Gather domains to be used with Certbot
     - set_fact:
         domain: "{{ item.domain }}"
       loop: "{{ terminator_vhosts }}"
@@ -124,10 +125,46 @@
         domains: >-
           {{ domains_fact | json_query('results[*].ansible_facts.domain') | list | unique }}
 
-    # Set up certbot
-    - include_role:
-        name: geerlingguy.certbot
-      vars:
-        certbot_admin_email: artyom@aelve.com
-        certbot_certs:
-          - domains: "{{ domains }}"
+    # Set up Certbot
+    - name: Ensure Certbot repo is present
+      apt_repository:
+        repo: ppa:certbot/certbot
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install Certbot
+      package: "name=certbot state=present"
+
+    - name: Install the Nginx Certbot plugin
+      package: "name=python-certbot-nginx state=present"
+
+    - name: Copy the Nginx config for Certbot
+      copy:
+        remote_src: yes
+        src: /usr/lib/python3/dist-packages/certbot_nginx/options-ssl-nginx.conf
+        dest: /etc/letsencrypt/options-ssl-nginx.conf
+
+    - name: Create certificates
+      shell: >-
+        certbot certonly
+        --standalone
+        --staging
+        --noninteractive
+        --agree-tos
+        --email artyom@aelve.com
+        --cert-name aelve
+        -d {{ domains | join(',') }}
+
+    - name: Add montly cron job for certificate renewal
+      cron:
+        name: Certbot automatic renewal
+        job: >-
+          certbot renew
+          --pre-hook "service nginx stop"
+          --post-hook "service nginx start"
+        day: "1"
+        minute: "0"
+        hour: "12"
+        user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+
+    - name: Start Nginx
+      service: name=nginx state=started
