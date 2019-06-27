@@ -14,12 +14,27 @@
       vars:
         nginx_remove_default_vhost: true
         nginx_upstreams:
+          # Codesearch
           - name: codesearch
-            servers: { "s1.codesearch.aelve.com" }
+            servers: [ "s1.codesearch.aelve.com" ]
+          - name: codesearch-portainer
+            servers: [ "s1.codesearch.aelve.com:{{ codesearch_portainer_port }}" ]
+
+          # Codesearch staging
           - name: codesearch-staging
-            servers: { "s1.staging.codesearch.aelve.com" }
-          - name: guide-staging
-            servers: { "s1.staging.guide.aelve.com" }
+            servers: [ "s1.staging.codesearch.aelve.com" ]
+          - name: codesearch-staging-portainer
+            servers: [ "s1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}" ]
+
+          # Guide staging
+          - name: guide-staging-front
+            servers: [ "s1.staging.guide.aelve.com:{{ guide_front_port }}" ]
+          - name: guide-staging-main
+            servers: [ "s1.staging.guide.aelve.com:{{ guide_back_main_port }}" ]
+          - name: guide-staging-api
+            servers: [ "s1.staging.guide.aelve.com:{{ guide_back_api_port }}" ]
+          - name: guide-staging-ekg
+            servers: [ "s1.staging.guide.aelve.com:{{ guide_back_ekg_port }}" ]
 
         nginx_vhosts:
           # Codesearch
@@ -32,7 +47,7 @@
             listen: "{{ codesearch_portainer_port }}"
             extra_parameters: |
               location / {
-                proxy_pass http://codesearch:{{ codesearch_portainer_port }};
+                proxy_pass http://codesearch-portainer;
               }
 
           # Codesearch staging
@@ -45,32 +60,32 @@
             listen: "{{ codesearch_portainer_port }}"
             extra_parameters: |
               location / {
-                proxy_pass http://codesearch-staging:{{ codesearch_portainer_port }};
+                proxy_pass http://codesearch-staging-portainer;
               }
 
           # Guide staging
           - server_name: "staging.guide.aelve.com"
             extra_parameters: |
               location / {
-                proxy_pass http://guide-staging:{{ guide_front_port }};
+                proxy_pass http://guide-staging-front;
               }
           - server_name: "staging.guide.aelve.com"
             listen: "{{ guide_back_main_port }}"
             extra_parameters: |
               location / {
-                proxy_pass http://guide-staging:{{ guide_back_main_port }};
+                proxy_pass http://guide-staging-main;
               }
           - server_name: "staging.guide.aelve.com"
             listen: "{{ guide_back_api_port }}"
             extra_parameters: |
               location / {
-                proxy_pass http://guide-staging:{{ guide_back_api_port }};
+                proxy_pass http://guide-staging-api;
               }
           - server_name: "staging.guide.aelve.com"
             listen: "{{ guide_back_ekg_port }}"
             extra_parameters: |
               location / {
-                proxy_pass http://guide-staging:{{ guide_back_ekg_port }};
+                proxy_pass http://guide-staging-ekg;
               }
 
     - include_role:
