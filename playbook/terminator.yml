@@ -69,11 +69,16 @@
           server_name: "{{ item.domain }}"
           listen: "{{ item.port }} ssl"
           # Detect HTTP traffic and redirect to HTTPS
-          error_page: "497 301 =307 https://$host:{{ item.port }}$request_uri;"
+          error_page: "497 301 =307 https://$host:{{ item.port }}$request_uri"
           extra_parameters: |
-            location / { proxy_pass http://{{ item.name }}; }
+            location / {
+              proxy_pass http://{{ item.name }};
+            }
+            ssl_certificate /etc/letsencrypt/live/aelve/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/aelve/privkey.pem;
+            include /etc/letsencrypt/options-ssl-nginx.conf;
+            ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
           filename: "{{ item.name }}.conf"
-          # TODO: SSL cert
       loop: "{{ terminator_vhosts }}"
       register: vhosts_fact
 
