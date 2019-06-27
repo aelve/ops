@@ -3,7 +3,7 @@
 # Set up a load balancer and SSL terminator. All our domains should point to
 # 'terminator', which reroutes traffic to the right machines.
 
-- hosts: terminator-test
+- hosts: terminator
 
   vars:
     terminator_vhosts:
@@ -147,7 +147,6 @@
       shell: >-
         certbot certonly
         --standalone
-        --staging
         --noninteractive
         --agree-tos
         --email artyom@aelve.com
