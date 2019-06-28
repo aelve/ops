@@ -145,11 +145,17 @@
     - name: Install the Nginx Certbot plugin
       package: "name=python-certbot-nginx state=present"
 
-    - name: Copy the Nginx config for Certbot
+    - name: Copy the Nginx config for Certbot (options-ssl-nginx.conf)
       copy:
         remote_src: yes
         src: /usr/lib/python3/dist-packages/certbot_nginx/options-ssl-nginx.conf
         dest: /etc/letsencrypt/options-ssl-nginx.conf
+
+    - name: Copy the Nginx config for Certbot (ssl-dparams.pem)
+      copy:
+        remote_src: yes
+        src: /usr/lib/python3/dist-packages/certbot/ssl-dhparams.pem
+        dest: /etc/letsencrypt/ssl-dhparams.pem
 
     - name: Create certificates
       shell: >-
