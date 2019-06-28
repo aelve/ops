@@ -1,67 +1,183 @@
 ---
 
-# Set up a load balancer and SSL terminator. All our domains should point
-# there and then traffic would be rerouted to the right machines.
-
-# When adding a domain, don't forget to update both balancer_vhosts and
-# certbot_certs.
-
-# To certbot_certs's domains add server_name.
-
-# More info at playbook/roles/holms.balancer/defaults/main.yml
+# Set up a load balancer and SSL terminator. All our domains should point to
+# 'terminator', which reroutes traffic to the right machines.
 
 - hosts: terminator
+
+  vars:
+    terminator_vhosts:
+      - name: codesearch
+        domain: codesearch.aelve.com
+        port: "443"
+        upstream: s1.codesearch.aelve.com
+
+      - name: codesearch-portainer
+        domain: codesearch.aelve.com
+        port: "{{ codesearch_portainer_port }}"
+        upstream: "s1.codesearch.aelve.com:{{ codesearch_portainer_port }}"
+
+      - name: codesearch-staging
+        domain: staging.codesearch.aelve.com
+        port: "443"
+        upstream: "s1.staging.codesearch.aelve.com"
+
+      - name: codesearch-staging-portainer
+        domain: staging.codesearch.aelve.com
+        port: "{{ codesearch_portainer_port }}"
+        upstream: "s1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}"
+
+      - name: guide-staging
+        domain: staging.guide.aelve.com
+        port: "443"
+        upstream: "s1.staging.guide.aelve.com:{{ guide_front_port }}"
+
+      - name: guide-staging-main
+        domain: staging.guide.aelve.com
+        port: "{{ guide_back_main_port }}"
+        upstream: "s1.staging.guide.aelve.com:{{ guide_back_main_port }}"
+
+      - name: guide-staging-api
+        domain: staging.guide.aelve.com
+        port: "{{ guide_back_api_port }}"
+        upstream: "s1.staging.guide.aelve.com:{{ guide_back_api_port }}"
+
+      - name: guide-staging-ekg
+        domain: staging.guide.aelve.com
+        port: "{{ guide_back_ekg_port }}"
+        upstream: "s1.staging.guide.aelve.com:{{ guide_back_ekg_port }}"
+
   tasks:
 
+    # Create configs to proxy all upstream servers locally, e.g.
+    # http://codesearch -> s1.codesearch.aelve.com
+    - set_fact:
+        upstream:
+          name: "{{ item.name }}"
+          servers: [ "{{ item.upstream }}" ]
+      loop: "{{ terminator_vhosts }}"
+      register: upstreams_fact
+
+    # (See https://stackoverflow.com/a/43633611/615030)
+    - set_fact:
+        upstreams: >-
+          {{ upstreams_fact | json_query('results[*].ansible_facts.upstream') | list }}
+
+    # Create a config for each vhost, pointing to one of the upstreams
+    - set_fact:
+        vhost:
+          server_name: "{{ item.domain }}"
+          listen: "{{ item.port }} ssl"
+          # Detect HTTP traffic and redirect to HTTPS
+          error_page: "497 301 =307 https://$host:{{ item.port }}$request_uri"
+          extra_parameters: |
+            location / {
+              proxy_pass http://{{ item.name }};
+              proxy_set_header Connection '';
+              proxy_set_header Host $http_host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+              chunked_transfer_encoding off;
+              proxy_buffering off;
+              proxy_cache off;
+            }
+            ssl_certificate /etc/letsencrypt/live/aelve/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/aelve/privkey.pem;
+            include /etc/letsencrypt/options-ssl-nginx.conf;
+            ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+          filename: "{{ item.name }}.conf"
+      loop: "{{ terminator_vhosts }}"
+      register: vhosts_fact
+
+    - set_fact:
+        vhosts: >-
+          {{ vhosts_fact | json_query('results[*].ansible_facts.vhost') | list }}
+
+    # Create 80->443 redirects for items with port=443
+    - set_fact:
+        redirect:
+          server_name: "{{ item.domain }}"
+          listen: "80"
+          return: "301 https://{{ item.domain }}$request_uri"
+          filename: "{{ item.name }}_http_redirect.conf"
+      loop: "{{ terminator_vhosts }}"
+      when: item.port == "443"
+      register: redirects_fact
+
+    - set_fact:
+        redirects: >-
+          {{ redirects_fact | json_query('results[*].ansible_facts.redirect') | list }}
+
+    # Set up Nginx
+    - name: Remove old Nginx vhosts
+      shell: "/bin/rm -rf /etc/nginx/sites-enabled/*"
+      args:
+        warn: false
+
     - include_role:
-        name: holms.balancer
+        name: geerlingguy.nginx
       vars:
-        balancer_vhosts:
-          - name: codesearch
-            upstreams: [ 's1.codesearch.aelve.com' ]
-            server_name: "codesearch.aelve.com"
+        nginx_remove_default_vhost: true
+        nginx_upstreams: "{{ upstreams }}"
+        nginx_vhosts: "{{ vhosts + redirects }}"
+        nginx_service_state: stopped
 
-          - name: codesearch-portainer
-            upstreams: [ 's1.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
-            server_name: "codesearch.aelve.com"
-            server_port: "{{ codesearch_portainer_port }}"
+    # Gather domains to be used with Certbot
+    - set_fact:
+        domain: "{{ item.domain }}"
+      loop: "{{ terminator_vhosts }}"
+      register: domains_fact
 
-          - name: codesearch-staging
-            upstreams: [ 's1.staging.codesearch.aelve.com' ]
-            server_name: "staging.codesearch.aelve.com"
+    - set_fact:
+        domains: >-
+          {{ domains_fact | json_query('results[*].ansible_facts.domain') | list | unique }}
 
-          - name: codesearch-staging-portainer
-            upstreams: [ 's1.staging.codesearch.aelve.com:{{ codesearch_portainer_port }}' ]
-            server_name: "staging.codesearch.aelve.com"
-            server_port: "{{ codesearch_portainer_port }}"
+    # Set up Certbot
+    - name: Ensure Certbot repo is present
+      apt_repository:
+        repo: ppa:certbot/certbot
+      when: ansible_distribution == "Ubuntu"
 
-          - name: guide-front
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_front_port }}' ]
-            server_name: "staging.guide.aelve.com"
+    - name: Install Certbot
+      package: "name=certbot state=present"
 
-          - name: guide-main
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_back_main_port }}' ]
-            server_name: "staging.guide.aelve.com"
-            server_port: "{{ guide_back_main_port }}"
+    - name: Install the Nginx Certbot plugin
+      package: "name=python-certbot-nginx state=present"
 
-          - name: guide-api
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_back_api_port }}' ]
-            server_name: "staging.guide.aelve.com"
-            server_port: "{{ guide_back_api_port }}"
+    - name: Copy the Nginx config for Certbot (options-ssl-nginx.conf)
+      copy:
+        remote_src: yes
+        src: /usr/lib/python3/dist-packages/certbot_nginx/options-ssl-nginx.conf
+        dest: /etc/letsencrypt/options-ssl-nginx.conf
 
-          - name: guide-ekg
-            upstreams: [ 's1.staging.guide.aelve.com:{{ guide_back_ekg_port }}' ]
-            server_name: "staging.guide.aelve.com"
-            server_port: "{{ guide_back_ekg_port }}"
+    - name: Copy the Nginx config for Certbot (ssl-dparams.pem)
+      copy:
+        remote_src: yes
+        src: /usr/lib/python3/dist-packages/certbot/ssl-dhparams.pem
+        dest: /etc/letsencrypt/ssl-dhparams.pem
 
-    - include_role:
-        name: geerlingguy.certbot
-      vars:
-        certbot_admin_email: artyom@aelve.com
-        certbot_certs:
-          - domains:
-              - staging.guide.aelve.com
-          - domains:
-              - codesearch.aelve.com
-          - domains:
-              - staging.codesearch.aelve.com
+    - name: Create certificates
+      shell: >-
+        certbot certonly
+        --standalone
+        --noninteractive
+        --agree-tos
+        --email artyom@aelve.com
+        --cert-name aelve
+        -d {{ domains | join(',') }}
+
+    - name: Add montly cron job for certificate renewal
+      cron:
+        name: Certbot automatic renewal
+        job: >-
+          certbot renew
+          --pre-hook "service nginx stop"
+          --post-hook "service nginx start"
+        day: "1"
+        minute: "0"
+        hour: "12"
+        user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+
+    - name: Start Nginx
+      service: name=nginx state=started
