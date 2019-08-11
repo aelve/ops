@@ -42,11 +42,6 @@
         port: "{{ guide_back_api_port }}"
         upstream: "s1.staging.guide.aelve.com:{{ guide_back_api_port }}"
 
-      - name: guide-staging-ekg
-        domain: staging.guide.aelve.com
-        port: "{{ guide_back_ekg_port }}"
-        upstream: "s1.staging.guide.aelve.com:{{ guide_back_ekg_port }}"
-
   tasks:
 
     # Create configs to proxy all upstream servers locally, e.g.

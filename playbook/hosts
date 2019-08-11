@@ -10,7 +10,6 @@ ansible_python_interpreter=/usr/bin/python3
 guide_front_port=5000
 guide_back_main_port=8080
 guide_back_api_port=4400
-guide_back_ekg_port=5050
 guide_back_image=develop--back
 guide_front_image=develop--front
 codesearch_portainer_port=9080
@@ -20,4 +19,3 @@ terminator.aelve.com
 
 [guide-staging]
 s1.staging.guide.aelve.com
-

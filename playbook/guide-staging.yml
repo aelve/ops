@@ -35,7 +35,6 @@
         ports:
           - "{{guide_back_main_port}}:{{guide_back_main_port}}"
           - "{{guide_back_api_port}}:{{guide_back_api_port}}"
-          - "{{guide_back_ekg_port}}:{{guide_back_ekg_port}}"
 
     - name: Pull the frontend docker image and restart container.
       docker_container:
