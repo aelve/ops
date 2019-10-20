@@ -23,18 +23,23 @@
           - name: docker
 
   tasks:
+    - name: Create a network for back and front to communicate.
+      docker_network:
+        name: guide
+
     - name: Pull the backend docker image and restart container.
       docker_container:
-        name: guide
+        name: back
         image: "quay.io/aelve/guide:{{guide_back_image}}"
         pull: true
         state: started
         restart: true
         restart_policy: always
-        command: "./guide"
         ports:
           - "{{guide_back_main_port}}:{{guide_back_main_port}}"
           - "{{guide_back_api_port}}:{{guide_back_api_port}}"
+        networks:
+          - name: guide
 
     - name: Pull the frontend docker image and restart container.
       docker_container:
@@ -44,6 +49,9 @@
         state: started
         restart: true
         restart_policy: always
-        command: "node ./dist/server"
         ports:
           - "{{guide_front_port}}:{{guide_front_port}}"
+        env:
+          API_URL: "http://back:{{guide_back_api_port}}/"
+        networks:
+          - name: guide
