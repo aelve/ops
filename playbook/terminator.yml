@@ -42,6 +42,21 @@
         port: "{{ guide_back_api_port }}"
         upstream: "s1.staging.guide.aelve.com:{{ guide_back_api_port }}"
 
+      - name: wiki
+        domain: wiki.aelve.com
+        port: "443"
+        upstream: "s1.wiki.aelve.com:{{ guide_front_port }}"
+
+      - name: wiki-main
+        domain: wiki.aelve.com
+        port: "{{ guide_back_main_port }}"
+        upstream: "s1.wiki.aelve.com:{{ guide_back_main_port }}"
+
+      - name: wiki-api
+        domain: wiki.aelve.com
+        port: "{{ guide_back_api_port }}"
+        upstream: "s1.wiki.aelve.com:{{ guide_back_api_port }}"
+
   tasks:
 
     # Create configs to proxy all upstream servers locally, e.g.

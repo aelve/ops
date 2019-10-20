@@ -1,0 +1,49 @@
+# Run this playbook to deploy or update wiki.aelve.com.
+#
+# During deployment, this playbook installs Docker, composes and keeps it
+# running. Then it fetches pointed in the host an image of Guide from
+# quay.io, runs a container, and starts the Guide. And all of them will
+# restarted if a server rebooted.
+#
+# Launch sites on http not https.
+#
+
+- hosts: wiki
+  become: true
+
+  name: Install Docker and run Guide from quay.io/aelve/guide
+  pre_tasks:
+    - include_role:
+        name: geerlingguy.docker
+    - include_role:
+        name: geerlingguy.pip
+      vars:
+        pip_package: python3-pip
+        pip_install_packages:
+          - name: docker
+
+  tasks:
+    - name: Pull the backend docker image and restart container.
+      docker_container:
+        name: guide
+        image: "quay.io/aelve/guide:{{guide_back_image}}"
+        pull: true
+        state: started
+        restart: true
+        restart_policy: always
+        command: "./guide"
+        ports:
+          - "{{guide_back_main_port}}:{{guide_back_main_port}}"
+          - "{{guide_back_api_port}}:{{guide_back_api_port}}"
+
+    - name: Pull the frontend docker image and restart container.
+      docker_container:
+        name: front
+        image: "quay.io/aelve/guide:{{guide_front_image}}"
+        pull: true
+        state: started
+        restart: true
+        restart_policy: always
+        command: "node ./dist/server"
+        ports:
+          - "{{guide_front_port}}:{{guide_front_port}}"

@@ -12,6 +12,8 @@ This repository contains scripts and playbooks and whatever. [See instructions i
 
   * `ansible-playbook playbook/guide-staging.yml` -- deploy or update `staging.guide.aelve.com`.
 
+  * `ansible-playbook playbook/wiki.yml` -- deploy or update `wiki.aelve.com`.
+
 ## Troubleshooting
 
 ### Ansible playbooks are stuck with `[__NSPlaceholderDate initialize] may have been in progress in another thread when fork() was called.`

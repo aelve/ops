@@ -4,6 +4,7 @@ guide.aelve.com
 s1.codesearch.aelve.com
 s1.staging.codesearch.aelve.com
 s1.staging.guide.aelve.com
+s1.wiki.aelve.com
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
@@ -19,3 +20,6 @@ terminator.aelve.com
 
 [guide-staging]
 s1.staging.guide.aelve.com
+
+[wiki]
+s1.wiki.aelve.com
