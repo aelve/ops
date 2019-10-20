@@ -42,10 +42,42 @@
         port: "{{ guide_back_api_port }}"
         upstream: "s1.staging.guide.aelve.com:{{ guide_back_api_port }}"
 
+      - name: vouch
+        domain: vouch.aelve.com
+        port: "443"
+        upstream: "s1.vouch.aelve.com:80"
+
       - name: wiki
         domain: wiki.aelve.com
         port: "443"
         upstream: "s1.wiki.aelve.com:{{ guide_front_port }}"
+        extra_parameters: |
+          # See https://github.com/vouch/vouch-proxy and
+          # https://developer.okta.com/blog/2018/08/28/nginx-auth-request
+          auth_request /validate;
+
+          location = /validate {
+            proxy_pass http://vouch/validate;
+            proxy_pass_request_body off;
+
+            proxy_set_header Host $http_host;
+
+            proxy_set_header Content-Length "";
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            auth_request_set $auth_resp_jwt $upstream_http_x_vouch_jwt;
+            auth_request_set $auth_resp_err $upstream_http_x_vouch_err;
+            auth_request_set $auth_resp_failcount $upstream_http_x_vouch_failcount;
+          }
+
+          error_page 401 = @error401;
+
+          # If the user is not logged in, redirect them to Vouch's login URL
+          location @error401 {
+            return 302 https://vouch.aelve.com/login?url=https://$http_host$request_uri&vouch-failcount=$auth_resp_failcount&X-Vouch-Token=$auth_resp_jwt&error=$auth_resp_err;
+          }
 
   tasks:
 
@@ -75,6 +107,9 @@
             if ($host != "{{ item.domain }}") {
               return 444;
             }
+
+            {{ item.extra_parameters | default('') }}
+
             location / {
               proxy_pass http://{{ item.name }};
               proxy_set_header Connection '';
@@ -86,6 +121,7 @@
               proxy_buffering off;
               proxy_cache off;
             }
+
             ssl_certificate /etc/letsencrypt/live/aelve/fullchain.pem;
             ssl_certificate_key /etc/letsencrypt/live/aelve/privkey.pem;
             include /etc/letsencrypt/options-ssl-nginx.conf;

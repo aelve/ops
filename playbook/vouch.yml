@@ -1,0 +1,59 @@
+- hosts: vouch
+  become: true
+
+  vars_prompt:
+    - name: google_client_id
+      prompt: "Google client ID (https://console.developers.google.com/apis/credentials)?"
+      private: no
+
+    - name: google_client_secret
+      prompt: "Google client secret?"
+      private: no
+
+  name: Install Vouch for handling Google auth for Aelve employees
+  pre_tasks:
+    - include_role:
+        name: geerlingguy.docker
+    - include_role:
+        name: geerlingguy.pip
+      vars:
+        pip_package: python3-pip
+        pip_install_packages:
+          - name: docker
+
+  tasks:
+    - name: Create config directory
+      file: path=/vouch/config state=directory
+
+    - name: Create data directory
+      file: path=/vouch/data state=directory
+
+    - name: Create config
+      copy:
+        dest: /vouch/config/config.yml
+        content: |
+          vouch:
+            domains:
+              - aelve.com
+          oauth:
+            provider: google
+            # credentials from
+            client_id: "{{ google_client_id }}"
+            client_secret: "{{ google_client_secret }}"
+            callback_urls:
+              - https://vouch.aelve.com/auth
+            preferredDomain: aelve.com
+
+    - name: Start Vouch
+      docker_container:
+        name: vouch-proxy
+        image: voucher/vouch-proxy
+        pull: true
+        state: started
+        restart: true
+        restart_policy: always
+        ports:
+          - "80:9090"
+        volumes:
+          - "/vouch/config:/config"
+          - "/vouch/data:/data"

@@ -5,6 +5,7 @@ s1.codesearch.aelve.com
 s1.staging.codesearch.aelve.com
 s1.staging.guide.aelve.com
 s1.wiki.aelve.com
+s1.vouch.aelve.com
 
 [all:vars]
 ansible_python_interpreter=/usr/bin/python3
@@ -23,3 +24,6 @@ s1.staging.guide.aelve.com
 
 [wiki]
 s1.wiki.aelve.com
+
+[vouch]
+s1.vouch.aelve.com
