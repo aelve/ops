@@ -71,6 +71,10 @@
           # Detect HTTP traffic and redirect to HTTPS
           error_page: "497 301 =307 https://$host:{{ item.port }}$request_uri"
           extra_parameters: |
+            # https://stackoverflow.com/a/25280214/615030
+            if ($host != "{{ item.domain }}") {
+              return 444;
+            }
             location / {
               proxy_pass http://{{ item.name }};
               proxy_set_header Connection '';
