@@ -162,6 +162,7 @@
         nginx_upstreams: "{{ upstreams }}"
         nginx_vhosts: "{{ vhosts + redirects }}"
         nginx_service_state: stopped
+        nginx_conf_template: "{{ playbook_dir }}/templates/nginx.conf.j2"
 
     # Gather domains to be used with Certbot
     - set_fact:
